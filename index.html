@@ -3,7 +3,1415 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DropVault — Sovereign End-to-End Encrypted File Sharing</title><!DOCTYPE html>
+  <title>DropVault — Sovereign End-to-End Encrypted File Sharing</title><!DOCTYPE html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DropVault — Sovereign End-to-End Encrypted File Sharing</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- QRCode.js for instant sharing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Google Fonts: Newsreader (PP Editorial Old alternative), Inter, and JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Newsreader', 'Times New Roman', 'Georgia', 'serif'],
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'SF Mono', 'Menlo', 'monospace'],
+          },
+          colors: {
+            mistral: {
+              orange: '#F54A00',
+              'orange-deep': '#CF3C00',
+              sunshine700: '#FA7A1E',
+              sunshine500: '#F99D26',
+              yellow: '#FFC83B',
+              cream: '#F7F3E8',
+              'cream-soft': '#FAF7F0',
+              'cream-deeper': '#EFE9D8',
+              'beige-deep': '#E2D9C5',
+              ink: '#111215',
+              charcoal: '#2B2D33',
+              slate: '#545763',
+              steel: '#737785',
+              hairline: '#E7E3D8',
+              'hairline-strong': '#D4CEBF',
+              code: '#121316',
+            }
+          },
+          borderRadius: {
+            'md': '8px',
+            'lg': '12px',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #FFFFFF;
+      color: #111215;
+    }
+    .font-editorial {
+      font-family: 'Newsreader', Georgia, serif;
+      letter-spacing: -0.025em;
+    }
+    .sunset-stripe {
+      background: linear-gradient(90deg, #F54A00 0%, #FA7A1E 26%, #F99D26 52%, #FFC83B 78%, #F7F3E8 100%);
+    }
+    .mountain-sunset-bg {
+      background: radial-gradient(circle at 80% 20%, rgba(249, 157, 38, 0.22) 0%, rgba(245, 74, 0, 0.12) 35%, rgba(255, 255, 255, 0) 70%),
+                  linear-gradient(180deg, #FAF7F0 0%, #FFFFFF 100%);
+    }
+    .drop-active {
+      border-color: #F54A00 !important;
+      background-color: #FAF4E8 !important;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #F7F3E8;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #D4CEBF;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-[#F54A00] selection:text-white">
+
+  <!-- Promo Banner -->
+  <div class="bg-mistral-ink text-mistral-cream-soft text-xs py-2 px-4 border-b border-mistral-charcoal text-center font-medium tracking-tight">
+    <span>Client-Side AES-256 Cryptography &bull; Zero Server Custody &bull; Frontier Privacy</span>
+  </div>
+
+  <!-- Top Navigation (Marketing Bar) -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-mistral-hairline h-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
+      <!-- Mistral-style Brand Mark -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('send')">
+        <div class="w-8 h-8 rounded-md bg-mistral-ink text-white flex items-center justify-center font-mono font-bold text-sm tracking-tighter">
+          DV_
+        </div>
+        <div>
+          <span class="font-editorial text-xl font-normal tracking-tight text-mistral-ink">DropVault</span>
+          <span class="text-[10px] ml-1.5 font-mono uppercase tracking-widest text-mistral-steel">v2.4</span>
+        </div>
+      </div>
+
+      <!-- Sober Editorial Navigation -->
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <button id="navSendBtn" onclick="switchView('send')" class="px-4 py-2 rounded-md text-sm font-medium transition-colors bg-mistral-cream border border-mistral-beige-deep text-mistral-ink">
+          Send File
+        </button>
+        <button id="navReceiveBtn" onclick="switchView('receive')" class="px-4 py-2 rounded-md text-sm font-medium transition-colors text-mistral-slate hover:text-mistral-ink">
+          Receive
+        </button>
+        <button id="navHistoryBtn" onclick="openHistoryModal()" class="px-3.5 py-2 rounded-md text-sm font-medium transition-colors text-mistral-slate hover:text-mistral-ink flex items-center space-x-1.5">
+          <i data-lucide="clock" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Transfers</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col justify-center">
+
+    <!-- VIEW 1: SEND / UPLOAD FILE -->
+    <div id="viewSend" class="space-y-8">
+      
+      <!-- Hero Headline (PP Editorial Old styling) -->
+      <div class="text-center max-w-2xl mx-auto space-y-3">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-mistral-cream-deeper text-mistral-ink text-xs font-medium border border-mistral-beige-deep">
+          <span class="w-1.5 h-1.5 rounded-full bg-mistral-orange"></span>
+          <span>Peer-to-Peer Encryption Engine</span>
+        </div>
+        <h1 class="font-editorial text-4xl sm:text-5xl md:text-6xl text-mistral-ink leading-[1.08] tracking-tight">
+          Sovereign file sharing.<br><span class="italic text-mistral-charcoal">In your hands.</span>
+        </h1>
+        <p class="text-mistral-slate text-sm sm:text-base leading-relaxed max-w-lg mx-auto">
+          Client-side AES-256-GCM encryption. Files are sealed in your browser memory before generating ephemeral, tamper-evident transfer links.
+        </p>
+      </div>
+
+      <!-- Cream Form Panel -->
+      <div class="bg-mistral-cream border border-mistral-beige-deep rounded-lg p-6 sm:p-10 shadow-[0_4px_12px_rgba(0,0,0,0.03)] relative overflow-hidden">
+        
+        <!-- Drag & Drop Zone -->
+        <div id="dropZone" class="border-2 border-dashed border-mistral-hairline-strong hover:border-mistral-orange rounded-md p-8 sm:p-12 text-center transition-all cursor-pointer flex flex-col items-center justify-center bg-white group">
+          <input type="file" id="fileInput" class="hidden">
+          
+          <div class="w-12 h-12 rounded-md bg-mistral-cream-soft border border-mistral-beige-deep flex items-center justify-center text-mistral-orange mb-3 group-hover:scale-105 transition-transform">
+            <i data-lucide="upload" class="w-6 h-6"></i>
+          </div>
+          
+          <h3 class="text-base font-medium text-mistral-ink mb-1">
+            Drop file to seal, or <span class="text-mistral-orange underline underline-offset-4 decoration-mistral-orange/40">browse local storage</span>
+          </h3>
+          <p class="text-xs text-mistral-steel">
+            Supported: Documents, Archives, Media, Binaries up to browser memory capacity
+          </p>
+
+          <div class="mt-4 flex flex-wrap justify-center gap-3 text-xs text-mistral-slate">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-mistral-cream-deeper text-mistral-ink">
+              <i data-lucide="shield" class="w-3 h-3 mr-1 text-mistral-orange"></i> Zero Knowledge
+            </span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-mistral-cream-deeper text-mistral-ink">
+              <i data-lucide="hash" class="w-3 h-3 mr-1 text-mistral-charcoal"></i> SHA-256 Verified
+            </span>
+          </div>
+        </div>
+
+        <!-- Selected File Preview Card -->
+        <div id="selectedFileCard" class="hidden mt-6 p-4 rounded-md bg-white border border-mistral-hairline-strong flex items-center justify-between">
+          <div class="flex items-center space-x-3 overflow-hidden">
+            <div id="fileTypeIcon" class="w-10 h-10 rounded-md bg-mistral-cream border border-mistral-beige-deep flex items-center justify-center text-mistral-ink shrink-0">
+              <i data-lucide="file-text" class="w-5 h-5"></i>
+            </div>
+            <div class="overflow-hidden">
+              <p id="fileNameDisplay" class="font-medium text-mistral-ink truncate text-sm">archive.zip</p>
+              <p id="fileSizeDisplay" class="text-xs font-mono text-mistral-steel">0.00 MB</p>
+            </div>
+          </div>
+          <button id="removeFileBtn" class="p-2 text-mistral-steel hover:text-mistral-orange transition-colors rounded-md hover:bg-mistral-cream" title="Remove file">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Security Configurations -->
+        <div class="mt-6 border-t border-mistral-beige-deep pt-6 space-y-5">
+          
+          <!-- Password toggle switch -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-start space-x-3">
+              <div class="p-1.5 rounded-md bg-white border border-mistral-beige-deep text-mistral-ink mt-0.5">
+                <i data-lucide="key" class="w-4 h-4 text-mistral-orange"></i>
+              </div>
+              <div>
+                <label for="passwordToggle" class="text-sm font-medium text-mistral-ink cursor-pointer select-none">
+                  Protect with Secret Password
+                </label>
+                <p class="text-xs text-mistral-steel">Derives 256-bit AES-GCM key via PBKDF2 (100,000 rounds). Decryption requires password.</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" id="passwordToggle" class="sr-only peer">
+              <div class="w-11 h-6 bg-mistral-hairline-strong peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-mistral-orange"></div>
+            </label>
+          </div>
+
+          <!-- Password Input field (Toggled) -->
+          <div id="passwordFieldContainer" class="hidden transition-all pt-1">
+            <div class="relative">
+              <input type="password" id="filePasswordInput" placeholder="Specify decryption passphrase..." class="w-full bg-white border border-mistral-hairline-strong focus:border-mistral-orange rounded-md px-4 py-2.5 pr-10 text-sm text-mistral-ink placeholder-mistral-steel outline-none transition-colors">
+              <button type="button" id="togglePasswordVisibility" class="absolute right-3 top-1/2 -translate-y-1/2 text-mistral-steel hover:text-mistral-ink p-1">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Retention and Self Destruct Row -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <!-- Expiry Selector -->
+            <div>
+              <label class="block text-xs font-semibold text-mistral-charcoal uppercase tracking-wider mb-1.5 flex items-center">
+                <i data-lucide="clock" class="w-3.5 h-3.5 mr-1.5 text-mistral-orange"></i> Expiration Lifecycle
+              </label>
+              <select id="expirySelect" class="w-full bg-white border border-mistral-hairline-strong text-mistral-ink text-xs rounded-md px-3 py-2.5 focus:border-mistral-orange outline-none">
+                <option value="never">Permanent (No Auto-Expiry)</option>
+                <option value="10m">10 Minutes</option>
+                <option value="1h" selected>1 Hour</option>
+                <option value="24h">24 Hours</option>
+                <option value="7d">7 Days</option>
+              </select>
+            </div>
+
+            <!-- Self-Destruct Mode (Burn After Reading) -->
+            <div class="flex items-center justify-between p-3 rounded-md bg-white border border-mistral-hairline-strong">
+              <div class="pr-2">
+                <div class="text-xs font-semibold text-mistral-ink flex items-center">
+                  <i data-lucide="flame" class="w-3.5 h-3.5 mr-1 text-mistral-orange"></i> Burn After Download
+                </div>
+                <p class="text-[11px] text-mistral-steel">Destroys payload after 1st successful download.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" id="burnAfterDownloadToggle" class="sr-only peer">
+                <div class="w-9 h-5 bg-mistral-hairline-strong peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-mistral-orange"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Bar Container -->
+        <div id="uploadProgressContainer" class="hidden mt-6 space-y-2">
+          <div class="flex justify-between text-xs text-mistral-slate font-mono">
+            <span id="progressStatusText">Sealing payload...</span>
+            <span id="progressPercentText">0%</span>
+          </div>
+          <div class="w-full bg-mistral-cream-deeper rounded-full h-1.5 overflow-hidden">
+            <div id="progressBarFill" class="bg-mistral-orange h-1.5 transition-all duration-200" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Primary CTA Button (Saturated Mistral Orange, rounded-md) -->
+        <button id="generateLinkBtn" disabled class="mt-6 w-full py-3 px-6 rounded-md font-medium text-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-mistral-orange hover:bg-mistral-orange-deep text-white shadow-sm">
+          <i data-lucide="lock" class="w-4 h-4"></i>
+          <span>Create Secure Transfer</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- VIEW 2: SHARE SUCCESS MODAL / CARD -->
+    <div id="viewSuccess" class="hidden space-y-6">
+      <div class="bg-mistral-cream border border-mistral-beige-deep rounded-lg p-6 sm:p-10 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
+        
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 bg-white border border-mistral-beige-deep text-mistral-orange rounded-md flex items-center justify-center mx-auto mb-3 shadow-sm">
+            <i data-lucide="check" class="w-6 h-6"></i>
+          </div>
+          <h2 class="font-editorial text-3xl font-normal text-mistral-ink">Transfer Package Sealed</h2>
+          <p class="text-mistral-slate text-sm mt-1">Direct cryptographic transfer link generated.</p>
+        </div>
+
+        <!-- File meta badge -->
+        <div class="bg-white border border-mistral-hairline-strong rounded-md p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3 overflow-hidden">
+            <div class="w-9 h-9 rounded-md bg-mistral-cream border border-mistral-beige-deep text-mistral-ink flex items-center justify-center shrink-0">
+              <i data-lucide="file" class="w-4 h-4 text-mistral-orange"></i>
+            </div>
+            <div class="overflow-hidden">
+              <p id="successFileName" class="text-sm font-medium text-mistral-ink truncate">document.pdf</p>
+              <p id="successFileSize" class="text-xs font-mono text-mistral-steel">1.2 MB</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <div id="successPasswordBadge" class="text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-cream-deeper text-mistral-ink">
+              Open Access
+            </div>
+            <div id="successExpiryBadge" class="text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-cream-deeper text-mistral-charcoal">
+              Expires in 1h
+            </div>
+          </div>
+        </div>
+
+        <!-- Shareable Link Input -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-mistral-charcoal uppercase tracking-wider block">Direct Retrieval URL</label>
+          <div class="flex items-center space-x-2">
+            <input type="text" id="shareUrlInput" readonly class="w-full bg-white border border-mistral-hairline-strong rounded-md px-3.5 py-2.5 text-xs text-mistral-charcoal select-all font-mono outline-none">
+            <button id="copyShareUrlBtn" class="shrink-0 bg-mistral-orange hover:bg-mistral-orange-deep text-white font-medium px-4 py-2.5 rounded-md text-xs flex items-center space-x-1.5 transition-colors">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Code & QR Code Container -->
+        <div class="mt-6 pt-6 border-t border-mistral-beige-deep grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+          <!-- Short Transfer Code -->
+          <div class="bg-white p-4 rounded-md border border-mistral-hairline-strong flex flex-col justify-between">
+            <div>
+              <p class="text-xs text-mistral-steel font-medium">Transfer Code</p>
+              <div class="flex items-center justify-between mt-2">
+                <span id="shortCodeDisplay" class="font-mono text-2xl font-bold tracking-wider text-mistral-ink">DV-0000</span>
+                <button id="copyShortCodeBtn" class="text-mistral-slate hover:text-mistral-ink p-1.5 rounded-md hover:bg-mistral-cream" title="Copy code">
+                  <i data-lucide="copy" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+            <p class="text-[11px] text-mistral-steel mt-2">Enter this short code inside the Receive tab to unlock.</p>
+          </div>
+
+          <!-- QR Code Trigger -->
+          <div class="bg-white p-4 rounded-md border border-mistral-hairline-strong flex items-center space-x-3">
+            <div id="qrcodeContainer" class="p-1 border border-mistral-hairline rounded bg-white shrink-0"></div>
+            <div>
+              <p class="text-xs font-semibold text-mistral-ink">Instant Mobile Scan</p>
+              <p class="text-[11px] text-mistral-steel mt-0.5">Camera lens links directly into the decryption protocol.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Mockup Block for Checksum Integrity -->
+        <div class="mt-4 rounded-md bg-mistral-code text-white p-3 font-mono text-xs border border-mistral-charcoal flex items-center justify-between">
+          <div class="overflow-hidden pr-2">
+            <span class="text-mistral-steel text-[10px] uppercase font-semibold block tracking-wider">SHA-256 Checksum</span>
+            <span id="successHashDisplay" class="text-mistral-yellow truncate block text-[11px]">Calculating...</span>
+          </div>
+          <button id="copyHashBtn" class="text-mistral-steel hover:text-white p-1 rounded hover:bg-mistral-charcoal shrink-0" title="Copy Hash">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- Action Buttons Row -->
+        <div class="mt-6 flex flex-col sm:flex-row gap-2.5">
+          <button id="nativeShareBtn" class="flex-1 py-2.5 px-4 rounded-md bg-mistral-ink hover:bg-mistral-charcoal text-white font-medium text-xs flex items-center justify-center space-x-2 transition-colors">
+            <i data-lucide="share-2" class="w-4 h-4"></i>
+            <span>Share via System / Apps</span>
+          </button>
+          <button onclick="simulateOpenLink()" class="py-2.5 px-4 rounded-md bg-white border border-mistral-hairline-strong hover:bg-mistral-cream text-mistral-ink font-medium text-xs flex items-center justify-center space-x-2 transition-colors">
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+            <span>Inspect Download</span>
+          </button>
+          <button onclick="switchView('send')" class="py-2.5 px-4 rounded-md bg-transparent border border-mistral-hairline-strong text-mistral-slate hover:text-mistral-ink font-medium text-xs flex items-center justify-center space-x-1 transition-colors">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>New Transfer</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VIEW 3: RECEIVE / DOWNLOAD FILE -->
+    <div id="viewReceive" class="hidden space-y-6">
+      
+      <div class="text-center max-w-lg mx-auto mb-2">
+        <h1 class="font-editorial text-3xl sm:text-4xl font-normal text-mistral-ink">
+          Retrieve Shared Package
+        </h1>
+        <p class="text-mistral-slate mt-1 text-sm">
+          Enter a transfer short code or paste a secure link to extract the payload.
+        </p>
+      </div>
+
+      <!-- Code Lookup Input -->
+      <div id="lookupContainer" class="bg-mistral-cream border border-mistral-beige-deep rounded-lg p-6 sm:p-8">
+        <label class="block text-xs font-semibold text-mistral-charcoal uppercase tracking-wider mb-2">
+          Transfer Code or Full URL
+        </label>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-mistral-steel"></i>
+            <input type="text" id="manualLookupInput" placeholder="DV-XXXX or full link..." class="w-full bg-white border border-mistral-hairline-strong focus:border-mistral-orange rounded-md pl-10 pr-4 py-2.5 text-sm font-mono text-mistral-ink placeholder-mistral-steel outline-none">
+          </div>
+          <button id="lookupFileBtn" class="bg-mistral-orange hover:bg-mistral-orange-deep text-white font-medium px-5 py-2.5 rounded-md text-sm flex items-center justify-center space-x-2 transition-colors shrink-0">
+            <span>Fetch Package</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- File Unlocked / Found Card -->
+      <div id="fileDownloadCard" class="hidden bg-mistral-cream border border-mistral-beige-deep rounded-lg p-6 sm:p-8">
+        
+        <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 pb-6 border-b border-mistral-beige-deep text-center sm:text-left">
+          <div class="w-12 h-12 rounded-md bg-white border border-mistral-beige-deep text-mistral-orange flex items-center justify-center shrink-0">
+            <i data-lucide="package" class="w-6 h-6"></i>
+          </div>
+          <div class="flex-1 overflow-hidden">
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
+              <h3 id="targetFileName" class="font-editorial text-2xl font-normal text-mistral-ink truncate max-w-sm">file-document.pdf</h3>
+              <span id="securityBadge" class="text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-cream-deeper text-mistral-ink border border-mistral-beige-deep">
+                Integrity Verified
+              </span>
+              <span id="receiverExpiryBadge" class="text-xs px-2.5 py-0.5 rounded-full font-medium bg-white text-mistral-charcoal border border-mistral-hairline-strong">
+                Active
+              </span>
+              <span id="receiverBurnBadge" class="hidden text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-orange text-white">
+                1-Time Burn
+              </span>
+            </div>
+            <p id="targetFileSize" class="text-xs font-mono text-mistral-steel">Size: 4.8 MB</p>
+            <p id="targetFileChecksum" class="text-[11px] text-mistral-slate font-mono mt-0.5 truncate">SHA-256: ---</p>
+          </div>
+        </div>
+
+        <!-- Expired Notice -->
+        <div id="expiredFileNotice" class="hidden my-4 p-4 rounded-md bg-white border border-mistral-orange text-mistral-orange-deep text-xs flex items-center space-x-3">
+          <i data-lucide="alert-octagon" class="w-5 h-5 shrink-0"></i>
+          <div>
+            <span class="font-bold block text-sm">Transfer No Longer Available</span>
+            This file has expired or was wiped automatically following its single-use self-destruct rule.
+          </div>
+        </div>
+
+        <!-- Password Challenge Box -->
+        <div id="passwordChallengeBox" class="hidden py-6 border-b border-mistral-beige-deep">
+          <div class="bg-white border border-mistral-hairline-strong rounded-md p-4 mb-4 flex items-start space-x-3">
+            <i data-lucide="lock" class="w-4 h-4 text-mistral-orange shrink-0 mt-0.5"></i>
+            <div class="text-xs text-mistral-slate">
+              <span class="font-semibold block text-mistral-ink mb-0.5">Passphrase Required</span>
+              The sender sealed this file with client-side encryption. Enter the secret key to decrypt.
+            </div>
+          </div>
+
+          <label class="block text-xs font-semibold text-mistral-charcoal uppercase tracking-wider mb-2">Decryption Passphrase</label>
+          <div class="relative">
+            <input type="password" id="receiverPasswordInput" placeholder="Enter passphrase..." class="w-full bg-white border border-mistral-hairline-strong focus:border-mistral-orange rounded-md px-4 py-2.5 pr-10 text-sm text-mistral-ink placeholder-mistral-steel outline-none">
+            <button type="button" id="toggleReceiverPasswordVisibility" class="absolute right-3 top-1/2 -translate-y-1/2 text-mistral-steel hover:text-mistral-ink p-1">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <p id="passwordErrorMsg" class="hidden text-xs text-mistral-orange mt-2 flex items-center">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5 mr-1"></i> Incorrect passphrase. Decryption failed.
+          </p>
+        </div>
+
+        <!-- Download & Preview Actions -->
+        <div id="downloadActionGroup" class="mt-6 flex flex-col sm:flex-row gap-3">
+          <button id="previewActionBtn" class="py-2.5 px-5 rounded-md font-medium text-xs flex items-center justify-center space-x-2 bg-white hover:bg-mistral-cream-soft text-mistral-ink border border-mistral-hairline-strong transition-colors">
+            <i data-lucide="eye" class="w-4 h-4 text-mistral-orange"></i>
+            <span>Preview in Browser</span>
+          </button>
+          <button id="downloadActionBtn" class="flex-1 py-2.5 px-5 rounded-md font-medium text-xs flex items-center justify-center space-x-2 bg-mistral-orange hover:bg-mistral-orange-deep text-white transition-colors">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span id="downloadBtnText">Decrypt & Download</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- In-Browser File Preview Modal -->
+  <div id="previewModal" class="fixed inset-0 z-50 bg-mistral-ink/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-mistral-cream border border-mistral-beige-deep rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-4 px-6 border-b border-mistral-beige-deep flex items-center justify-between bg-white">
+        <div class="flex items-center space-x-2 overflow-hidden">
+          <i data-lucide="eye" class="w-4 h-4 text-mistral-orange shrink-0"></i>
+          <h3 id="previewModalTitle" class="font-editorial text-lg text-mistral-ink truncate">File Preview</h3>
+        </div>
+        <button onclick="closePreviewModal()" class="text-mistral-steel hover:text-mistral-ink p-1 rounded">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div id="previewModalBody" class="flex-1 overflow-auto custom-scroll p-6 flex flex-col items-center justify-center min-h-[300px] bg-white">
+        <!-- Dynamic preview content injected here -->
+      </div>
+
+      <div class="p-4 border-t border-mistral-beige-deep flex justify-end space-x-2 bg-mistral-cream">
+        <button onclick="closePreviewModal()" class="px-4 py-2 rounded-md text-mistral-slate hover:text-mistral-ink text-xs font-medium transition-colors">
+          Dismiss
+        </button>
+        <button onclick="downloadFromPreview()" class="px-4 py-2 rounded-md bg-mistral-orange hover:bg-mistral-orange-deep text-white text-xs font-medium flex items-center space-x-1.5 transition-colors">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Download Now</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transfer History Modal -->
+  <div id="historyModal" class="fixed inset-0 z-50 bg-mistral-ink/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-mistral-cream border border-mistral-beige-deep rounded-lg w-full max-w-lg p-6 max-h-[80vh] flex flex-col shadow-2xl">
+      <div class="flex items-center justify-between pb-4 border-b border-mistral-beige-deep">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="archive" class="w-4 h-4 text-mistral-orange"></i>
+          <h3 class="font-editorial text-xl font-normal text-mistral-ink">Vault Transfer History</h3>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-mistral-steel hover:text-mistral-ink p-1 rounded">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div id="historyList" class="flex-1 overflow-y-auto custom-scroll py-4 space-y-2.5">
+        <!-- History items injected here -->
+      </div>
+
+      <div class="pt-4 border-t border-mistral-beige-deep flex justify-between items-center text-xs text-mistral-steel">
+        <span>Stored securely in browser memory vault</span>
+        <button onclick="clearHistory()" class="text-mistral-orange hover:underline font-medium">Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast Element -->
+  <div id="toast" class="fixed bottom-10 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 flex items-center space-x-2.5 px-4 py-3 rounded-md shadow-lg text-xs font-medium border bg-mistral-ink text-white border-mistral-charcoal pointer-events-none">
+    <i id="toastIcon" data-lucide="check" class="w-4 h-4 text-mistral-orange"></i>
+    <span id="toastMsg">Action completed</span>
+  </div>
+
+  <!-- SIGNATURE SUNSET STRIPE BAND (Mistral AI Brand Element) -->
+  <div class="w-full h-2.5 sunset-stripe mt-auto"></div>
+
+  <!-- Cream Footer Region -->
+  <footer class="bg-mistral-cream border-t border-mistral-beige-deep py-8 px-6 text-center text-xs text-mistral-steel">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <span class="font-editorial text-base text-mistral-ink font-normal">DropVault</span>
+        <span>&bull; Sovereign File Transfer Engine</span>
+      </div>
+      <div class="text-mistral-slate text-[11px]">
+        100% Client-Side WebCrypto AES-GCM &bull; Zero Server Storage Custody
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // State storage
+    let selectedFile = null;
+    let currentUploadedRecord = null;
+    let targetDownloadRecord = null;
+    let dbInstance = null;
+    let previewBufferCache = null;
+
+    // Web Audio Synthesizer for feedback chimes
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playChime(type = 'success') {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'success') {
+          osc.frequency.setValueAtTime(587.33, now); // D5
+          osc.frequency.exponentialRampToValueAtTime(880.00, now + 0.15); // A5
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'copy') {
+          osc.frequency.setValueAtTime(740, now); // F#5
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        }
+      } catch (e) {
+        // Fallback for audio restrictions
+      }
+    }
+
+    // SHA-256 Digest calculation
+    async function calculateSHA256(arrayBuffer) {
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Open IndexedDB for local storage
+    function initDatabase() {
+      return new Promise((resolve) => {
+        const req = indexedDB.open('DropVaultDB_Mistral', 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('files')) {
+            db.createObjectStore('files', { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = (e) => {
+          dbInstance = e.target.result;
+          resolve(dbInstance);
+        };
+        req.onerror = () => resolve(null);
+      });
+    }
+
+    // Save record to IndexedDB
+    async function saveFileRecord(record) {
+      if (!dbInstance) await initDatabase();
+      return new Promise((resolve, reject) => {
+        try {
+          const tx = dbInstance.transaction('files', 'readwrite');
+          const store = tx.objectStore('files');
+          store.put(record);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => reject(tx.error);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+
+    // Derive AES-GCM Key from User Passphrase using PBKDF2
+    async function deriveKeyFromPassword(password, salt) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        enc.encode(password),
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
+
+      return await crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: 100000,
+          hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+    }
+
+    // Encrypt ArrayBuffer with AES-GCM
+    async function encryptData(arrayBuffer, password) {
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveKeyFromPassword(password, salt);
+
+      const cipherBuffer = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        arrayBuffer
+      );
+
+      return {
+        cipherBuffer,
+        salt: Array.from(salt),
+        iv: Array.from(iv)
+      };
+    }
+
+    // Decrypt ArrayBuffer with AES-GCM
+    async function decryptData(cipherBuffer, password, saltArr, ivArr) {
+      const salt = new Uint8Array(saltArr);
+      const iv = new Uint8Array(ivArr);
+      const key = await deriveKeyFromPassword(password, salt);
+
+      return await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        cipherBuffer
+      );
+    }
+
+    // Format byte sizes
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Generate Random 6-char Short Code
+    function generateShortCode() {
+      const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+      let code = 'DV-';
+      for (let i = 0; i < 4; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFileCard = document.getElementById('selectedFileCard');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const fileSizeDisplay = document.getElementById('fileSizeDisplay');
+    const removeFileBtn = document.getElementById('removeFileBtn');
+    const generateLinkBtn = document.getElementById('generateLinkBtn');
+    const passwordToggle = document.getElementById('passwordToggle');
+    const passwordFieldContainer = document.getElementById('passwordFieldContainer');
+    const filePasswordInput = document.getElementById('filePasswordInput');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('drop-active');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('drop-active');
+      });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileSelection(e.dataTransfer.files[0]);
+      }
+    });
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFileSelection(e.target.files[0]);
+      }
+    });
+
+    function handleFileSelection(file) {
+      selectedFile = file;
+      fileNameDisplay.textContent = file.name;
+      fileSizeDisplay.textContent = formatBytes(file.size);
+      
+      selectedFileCard.classList.remove('hidden');
+      dropZone.classList.add('hidden');
+      generateLinkBtn.disabled = false;
+      showToast('Payload loaded: ' + file.name, 'check');
+    }
+
+    removeFileBtn.addEventListener('click', () => {
+      selectedFile = null;
+      fileInput.value = '';
+      selectedFileCard.classList.add('hidden');
+      dropZone.classList.remove('hidden');
+      generateLinkBtn.disabled = true;
+    });
+
+    passwordToggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        passwordFieldContainer.classList.remove('hidden');
+        filePasswordInput.focus();
+      } else {
+        passwordFieldContainer.classList.add('hidden');
+        filePasswordInput.value = '';
+      }
+    });
+
+    document.getElementById('togglePasswordVisibility').addEventListener('click', function() {
+      const type = filePasswordInput.type === 'password' ? 'text' : 'password';
+      filePasswordInput.type = type;
+      this.innerHTML = type === 'password' ? '<i data-lucide="eye" class="w-4 h-4"></i>' : '<i data-lucide="eye-off" class="w-4 h-4"></i>';
+      lucide.createIcons();
+    });
+
+    document.getElementById('toggleReceiverPasswordVisibility').addEventListener('click', function() {
+      const input = document.getElementById('receiverPasswordInput');
+      const type = input.type === 'password' ? 'text' : 'password';
+      input.type = type;
+      this.innerHTML = type === 'password' ? '<i data-lucide="eye" class="w-4 h-4"></i>' : '<i data-lucide="eye-off" class="w-4 h-4"></i>';
+      lucide.createIcons();
+    });
+
+    generateLinkBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+
+      const isPasswordProtected = passwordToggle.checked;
+      const password = filePasswordInput.value.trim();
+
+      if (isPasswordProtected && !password) {
+        showToast('Please specify a secret passphrase.', 'alert-circle');
+        filePasswordInput.focus();
+        return;
+      }
+
+      generateLinkBtn.disabled = true;
+      const progressContainer = document.getElementById('uploadProgressContainer');
+      const progressBarFill = document.getElementById('progressBarFill');
+      const progressStatusText = document.getElementById('progressStatusText');
+      const progressPercentText = document.getElementById('progressPercentText');
+
+      progressContainer.classList.remove('hidden');
+      progressBarFill.style.width = '25%';
+      progressPercentText.textContent = '25%';
+      progressStatusText.textContent = 'Reading memory buffer...';
+
+      try {
+        const fileBuffer = await selectedFile.arrayBuffer();
+        
+        progressBarFill.style.width = '50%';
+        progressPercentText.textContent = '50%';
+        progressStatusText.textContent = 'Calculating SHA-256 fingerprint...';
+        const fileHash = await calculateSHA256(fileBuffer);
+
+        const expiryChoice = document.getElementById('expirySelect').value;
+        let expiresAt = null;
+        const now = Date.now();
+        if (expiryChoice === '10m') expiresAt = now + 10 * 60 * 1000;
+        else if (expiryChoice === '1h') expiresAt = now + 60 * 60 * 1000;
+        else if (expiryChoice === '24h') expiresAt = now + 24 * 60 * 60 * 1000;
+        else if (expiryChoice === '7d') expiresAt = now + 7 * 24 * 60 * 60 * 1000;
+
+        const burnAfterDownload = document.getElementById('burnAfterDownloadToggle').checked;
+
+        let finalDataBuffer = fileBuffer;
+        let salt = null;
+        let iv = null;
+
+        if (isPasswordProtected) {
+          progressBarFill.style.width = '75%';
+          progressPercentText.textContent = '75%';
+          progressStatusText.textContent = 'Executing AES-256-GCM cipher...';
+
+          const encResult = await encryptData(fileBuffer, password);
+          finalDataBuffer = encResult.cipherBuffer;
+          salt = encResult.salt;
+          iv = encResult.iv;
+        }
+
+        progressBarFill.style.width = '90%';
+        progressPercentText.textContent = '90%';
+        progressStatusText.textContent = 'Sealing package in local vault...';
+
+        const fileId = generateShortCode();
+        const record = {
+          id: fileId,
+          name: selectedFile.name,
+          size: selectedFile.size,
+          type: selectedFile.type || 'application/octet-stream',
+          timestamp: now,
+          expiresAt: expiresAt,
+          burnAfterDownload: burnAfterDownload,
+          downloadCount: 0,
+          checksum: fileHash,
+          isProtected: isPasswordProtected,
+          salt: salt,
+          iv: iv,
+          data: finalDataBuffer
+        };
+
+        await saveFileRecord(record);
+
+        progressBarFill.style.width = '100%';
+        progressPercentText.textContent = '100%';
+        progressStatusText.textContent = 'Transfer ready.';
+
+        setTimeout(() => {
+          progressContainer.classList.add('hidden');
+          renderSuccessView(record);
+          playChime('success');
+        }, 350);
+
+      } catch (err) {
+        showToast('Encryption fault: ' + err.message, 'alert-circle');
+        progressContainer.classList.add('hidden');
+        generateLinkBtn.disabled = false;
+      }
+    });
+
+    function renderSuccessView(record) {
+      currentUploadedRecord = record;
+      
+      document.getElementById('viewSend').classList.add('hidden');
+      document.getElementById('viewReceive').classList.add('hidden');
+      document.getElementById('viewSuccess').classList.remove('hidden');
+
+      document.getElementById('successFileName').textContent = record.name;
+      document.getElementById('successFileSize').textContent = formatBytes(record.size);
+      
+      const badge = document.getElementById('successPasswordBadge');
+      if (record.isProtected) {
+        badge.textContent = 'AES-256 Encrypted';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-orange text-white';
+      } else {
+        badge.textContent = 'Open Access';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-cream-deeper text-mistral-ink';
+      }
+
+      const expBadge = document.getElementById('successExpiryBadge');
+      if (record.burnAfterDownload) {
+        expBadge.textContent = '1-Time Burn';
+        expBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-charcoal text-white';
+      } else if (record.expiresAt) {
+        const timeLeft = Math.max(0, Math.round((record.expiresAt - Date.now()) / (60 * 1000)));
+        expBadge.textContent = `Expires in ~${timeLeft}m`;
+        expBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-cream-deeper text-mistral-charcoal';
+      } else {
+        expBadge.textContent = 'Permanent';
+        expBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-cream-deeper text-mistral-slate';
+      }
+
+      document.getElementById('successHashDisplay').textContent = record.checksum || 'N/A';
+
+      const baseUrl = window.location.href.split('#')[0];
+      const shareUrl = `${baseUrl}#file=${record.id}`;
+      document.getElementById('shareUrlInput').value = shareUrl;
+      document.getElementById('shortCodeDisplay').textContent = record.id;
+
+      const qrBox = document.getElementById('qrcodeContainer');
+      qrBox.innerHTML = '';
+      try {
+        new QRCode(qrBox, {
+          text: shareUrl,
+          width: 58,
+          height: 58,
+          colorDark: '#111215',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        // Silent QR fallback
+      }
+
+      lucide.createIcons();
+      showToast('Transfer package sealed.', 'check');
+    }
+
+    // Clipboard Copy Helper
+    function copyTextToClipboard(text, successMsg) {
+      const tempInput = document.createElement('textarea');
+      tempInput.value = text;
+      tempInput.style.position = 'fixed';
+      tempInput.style.left = '-9999px';
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        playChime('copy');
+        showToast(successMsg, 'copy');
+      } catch (err) {
+        showToast('Clipboard copy failed.', 'alert-triangle');
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    document.getElementById('copyShareUrlBtn').addEventListener('click', () => {
+      const url = document.getElementById('shareUrlInput').value;
+      copyTextToClipboard(url, 'Transfer URL copied.');
+    });
+
+    document.getElementById('copyShortCodeBtn').addEventListener('click', () => {
+      const code = document.getElementById('shortCodeDisplay').textContent;
+      copyTextToClipboard(code, 'Transfer code copied.');
+    });
+
+    document.getElementById('copyHashBtn').addEventListener('click', () => {
+      const hash = document.getElementById('successHashDisplay').textContent;
+      copyTextToClipboard(hash, 'SHA-256 hash copied.');
+    });
+
+    document.getElementById('nativeShareBtn').addEventListener('click', async () => {
+      if (!currentUploadedRecord) return;
+      const shareUrl = document.getElementById('shareUrlInput').value;
+      const shareData = {
+        title: `DropVault: ${currentUploadedRecord.name}`,
+        text: `Secure transfer of ${currentUploadedRecord.name}:`,
+        url: shareUrl
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          // User canceled
+        }
+      } else {
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + ' ' + shareUrl)}`;
+        window.open(whatsappUrl, '_blank');
+      }
+    });
+
+    function simulateOpenLink() {
+      if (!currentUploadedRecord) return;
+      window.location.hash = `file=${currentUploadedRecord.id}`;
+      loadTargetFileById(currentUploadedRecord.id);
+    }
+
+    async function loadTargetFileById(fileId) {
+      if (!dbInstance) await initDatabase();
+
+      return new Promise((resolve) => {
+        const tx = dbInstance.transaction('files', 'readonly');
+        const store = tx.objectStore('files');
+        const req = store.get(fileId);
+
+        req.onsuccess = (e) => {
+          const record = e.target.result;
+          if (record) {
+            targetDownloadRecord = record;
+            renderDownloadCard(record);
+            resolve(true);
+          } else {
+            showToast('Transfer expired or not found.', 'alert-triangle');
+            document.getElementById('fileDownloadCard').classList.add('hidden');
+            resolve(false);
+          }
+        };
+        req.onerror = () => {
+          showToast('Database error retrieving record.', 'alert-circle');
+          resolve(false);
+        };
+      });
+    }
+
+    function renderDownloadCard(record) {
+      switchView('receive');
+      document.getElementById('fileDownloadCard').classList.remove('hidden');
+      document.getElementById('targetFileName').textContent = record.name;
+      document.getElementById('targetFileSize').textContent = `Size: ${formatBytes(record.size)}`;
+      document.getElementById('targetFileChecksum').textContent = `SHA-256: ${record.checksum || 'N/A'}`;
+
+      const pwdBox = document.getElementById('passwordChallengeBox');
+      const errorMsg = document.getElementById('passwordErrorMsg');
+      const actionGroup = document.getElementById('downloadActionGroup');
+      const expiredNotice = document.getElementById('expiredFileNotice');
+      const burnBadge = document.getElementById('receiverBurnBadge');
+      const expiryBadge = document.getElementById('receiverExpiryBadge');
+
+      errorMsg.classList.add('hidden');
+      document.getElementById('receiverPasswordInput').value = '';
+
+      const isExpired = record.expiresAt && Date.now() > record.expiresAt;
+      const isBurned = record.burnAfterDownload && record.downloadCount >= 1;
+
+      if (isExpired || isBurned) {
+        expiredNotice.classList.remove('hidden');
+        actionGroup.classList.add('hidden');
+        pwdBox.classList.add('hidden');
+        expiryBadge.textContent = 'Expired';
+        expiryBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-medium bg-mistral-orange text-white';
+        return;
+      } else {
+        expiredNotice.classList.add('hidden');
+        actionGroup.classList.remove('hidden');
+      }
+
+      if (record.burnAfterDownload) {
+        burnBadge.classList.remove('hidden');
+      } else {
+        burnBadge.classList.add('hidden');
+      }
+
+      if (record.expiresAt) {
+        const minLeft = Math.max(0, Math.round((record.expiresAt - Date.now()) / (60 * 1000)));
+        expiryBadge.textContent = `Expires in ${minLeft}m`;
+      } else {
+        expiryBadge.textContent = 'Active';
+      }
+
+      if (record.isProtected) {
+        pwdBox.classList.remove('hidden');
+        document.getElementById('downloadBtnText').textContent = 'Decrypt & Download';
+      } else {
+        pwdBox.classList.add('hidden');
+        document.getElementById('downloadBtnText').textContent = 'Download Payload';
+      }
+
+      lucide.createIcons();
+      document.getElementById('fileDownloadCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('lookupFileBtn').addEventListener('click', async () => {
+      let input = document.getElementById('manualLookupInput').value.trim();
+      if (!input) {
+        showToast('Specify a transfer code or URL.', 'alert-circle');
+        return;
+      }
+
+      if (input.includes('#file=')) {
+        input = input.split('#file=')[1].trim();
+      }
+
+      const found = await loadTargetFileById(input.toUpperCase());
+      if (found) {
+        showToast('Transfer package located.', 'check');
+      }
+    });
+
+    document.getElementById('downloadActionBtn').addEventListener('click', async () => {
+      if (!targetDownloadRecord) return;
+
+      const record = targetDownloadRecord;
+      const downloadBtn = document.getElementById('downloadActionBtn');
+      const errorMsg = document.getElementById('passwordErrorMsg');
+      errorMsg.classList.add('hidden');
+
+      let readyBuffer = null;
+
+      if (record.isProtected) {
+        const enteredPassword = document.getElementById('receiverPasswordInput').value.trim();
+        if (!enteredPassword) {
+          errorMsg.textContent = 'Please provide the secret passphrase.';
+          errorMsg.classList.remove('hidden');
+          return;
+        }
+
+        try {
+          downloadBtn.disabled = true;
+          downloadBtn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Decrypting...</span>`;
+          lucide.createIcons();
+
+          readyBuffer = await decryptData(record.data, enteredPassword, record.salt, record.iv);
+        } catch (decryptErr) {
+          errorMsg.textContent = 'Passphrase incorrect. Decryption failed.';
+          errorMsg.classList.remove('hidden');
+          downloadBtn.disabled = false;
+          downloadBtn.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i><span>Decrypt & Download</span>`;
+          lucide.createIcons();
+          return;
+        }
+      } else {
+        readyBuffer = record.data;
+      }
+
+      try {
+        const blob = new Blob([readyBuffer], { type: record.type || 'application/octet-stream' });
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objectUrl;
+        a.download = record.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
+
+        playChime('success');
+        showToast('Payload delivered.', 'check');
+
+        record.downloadCount = (record.downloadCount || 0) + 1;
+        if (record.burnAfterDownload) {
+          const tx = dbInstance.transaction('files', 'readwrite');
+          tx.objectStore('files').delete(record.id);
+          tx.oncomplete = () => {
+            document.getElementById('downloadActionGroup').classList.add('hidden');
+            document.getElementById('expiredFileNotice').classList.remove('hidden');
+            showToast('Self-Destruct: Payload erased permanently.', 'flame');
+          };
+        } else {
+          saveFileRecord(record);
+        }
+      } catch (err) {
+        showToast('Download error: ' + err.message, 'alert-circle');
+      } finally {
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i><span>${record.isProtected ? 'Decrypt & Download' : 'Download Payload'}</span>`;
+        lucide.createIcons();
+      }
+    });
+
+    document.getElementById('previewActionBtn').addEventListener('click', async () => {
+      if (!targetDownloadRecord) return;
+      const record = targetDownloadRecord;
+      const errorMsg = document.getElementById('passwordErrorMsg');
+      errorMsg.classList.add('hidden');
+
+      let readyBuffer = null;
+      if (record.isProtected) {
+        const enteredPassword = document.getElementById('receiverPasswordInput').value.trim();
+        if (!enteredPassword) {
+          errorMsg.textContent = 'Enter passphrase to preview.';
+          errorMsg.classList.remove('hidden');
+          return;
+        }
+        try {
+          readyBuffer = await decryptData(record.data, enteredPassword, record.salt, record.iv);
+        } catch (e) {
+          errorMsg.textContent = 'Passphrase incorrect.';
+          errorMsg.classList.remove('hidden');
+          return;
+        }
+      } else {
+        readyBuffer = record.data;
+      }
+
+      previewBufferCache = { buffer: readyBuffer, name: record.name, type: record.type };
+      openPreviewModal(readyBuffer, record.name, record.type);
+    });
+
+    function openPreviewModal(buffer, filename, mimeType) {
+      const modal = document.getElementById('previewModal');
+      const body = document.getElementById('previewModalBody');
+      const title = document.getElementById('previewModalTitle');
+
+      title.textContent = filename;
+      body.innerHTML = '';
+
+      const blob = new Blob([buffer], { type: mimeType });
+      const blobUrl = URL.createObjectURL(blob);
+
+      if (mimeType.startsWith('image/')) {
+        body.innerHTML = `<img src="${blobUrl}" alt="${filename}" class="max-h-[60vh] max-w-full rounded-md object-contain border border-mistral-hairline">`;
+      } else if (mimeType.startsWith('video/')) {
+        body.innerHTML = `<video controls autoplay class="max-h-[60vh] w-full rounded-md bg-mistral-code"><source src="${blobUrl}" type="${mimeType}"></video>`;
+      } else if (mimeType.startsWith('audio/')) {
+        body.innerHTML = `
+          <div class="text-center p-6 space-y-4">
+            <div class="w-14 h-14 bg-mistral-cream text-mistral-orange border border-mistral-beige-deep rounded-md flex items-center justify-center mx-auto">
+              <i data-lucide="music" class="w-6 h-6"></i>
+            </div>
+            <p class="font-medium text-mistral-ink text-sm">${filename}</p>
+            <audio controls autoplay class="w-full max-w-md mx-auto"><source src="${blobUrl}" type="${mimeType}"></audio>
+          </div>
+        `;
+      } else if (mimeType.startsWith('text/') || filename.match(/\.(txt|json|js|html|css|py|md|log|ts|jsx|tsx)$/i)) {
+        const decoder = new TextDecoder();
+        const textContent = decoder.decode(buffer).slice(0, 50000);
+        body.innerHTML = `
+          <pre class="bg-mistral-code text-mistral-cream-soft p-4 rounded-md border border-mistral-charcoal text-xs font-mono w-full overflow-x-auto whitespace-pre-wrap max-h-[60vh] select-text">${escapeHtml(textContent)}</pre>
+        `;
+      } else if (mimeType === 'application/pdf') {
+        body.innerHTML = `
+          <iframe src="${blobUrl}" class="w-full h-[60vh] rounded-md border border-mistral-hairline"></iframe>
+        `;
+      } else {
+        body.innerHTML = `
+          <div class="text-center p-8">
+            <div class="w-12 h-12 bg-mistral-cream border border-mistral-beige-deep text-mistral-steel rounded-md flex items-center justify-center mx-auto mb-3">
+              <i data-lucide="file" class="w-6 h-6"></i>
+            </div>
+            <p class="text-sm font-medium text-mistral-ink">${filename}</p>
+            <p class="text-xs text-mistral-steel mt-1">Direct preview not supported for this format. Download payload to inspect.</p>
+          </div>
+        `;
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closePreviewModal() {
+      const modal = document.getElementById('previewModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function downloadFromPreview() {
+      if (!previewBufferCache) return;
+      const { buffer, name, type } = previewBufferCache;
+      const blob = new Blob([buffer], { type: type || 'application/octet-stream' });
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
+      playChime('success');
+      showToast('Payload delivered.', 'check');
+      closePreviewModal();
+    }
+
+    function escapeHtml(text) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function switchView(tab) {
+      const sendView = document.getElementById('viewSend');
+      const receiveView = document.getElementById('viewReceive');
+      const successView = document.getElementById('viewSuccess');
+      const navSend = document.getElementById('navSendBtn');
+      const navReceive = document.getElementById('navReceiveBtn');
+
+      if (tab === 'send') {
+        sendView.classList.remove('hidden');
+        receiveView.classList.add('hidden');
+        successView.classList.add('hidden');
+        navSend.className = 'px-4 py-2 rounded-md text-sm font-medium transition-colors bg-mistral-cream border border-mistral-beige-deep text-mistral-ink';
+        navReceive.className = 'px-4 py-2 rounded-md text-sm font-medium transition-colors text-mistral-slate hover:text-mistral-ink';
+      } else {
+        sendView.classList.add('hidden');
+        successView.classList.add('hidden');
+        receiveView.classList.remove('hidden');
+        navReceive.className = 'px-4 py-2 rounded-md text-sm font-medium transition-colors bg-mistral-cream border border-mistral-beige-deep text-mistral-ink';
+        navSend.className = 'px-4 py-2 rounded-md text-sm font-medium transition-colors text-mistral-slate hover:text-mistral-ink';
+      }
+      lucide.createIcons();
+    }
+
+    function showToast(message, icon = 'check') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.textContent = message;
+      toastIcon.setAttribute('data-lucide', icon);
+
+      lucide.createIcons();
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(window._toastTimeout);
+      window._toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    }
+
+    async function openHistoryModal() {
+      if (!dbInstance) await initDatabase();
+      const modal = document.getElementById('historyModal');
+      const list = document.getElementById('historyList');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      list.innerHTML = '<div class="text-center py-6 text-mistral-steel text-xs font-mono">Reading vault...</div>';
+
+      const tx = dbInstance.transaction('files', 'readonly');
+      const store = tx.objectStore('files');
+      const req = store.getAll();
+
+      req.onsuccess = () => {
+        const files = req.result || [];
+        if (files.length === 0) {
+          list.innerHTML = '<div class="text-center py-8 text-mistral-steel text-xs">No active transfer packages found.</div>';
+          return;
+        }
+
+        list.innerHTML = files.map(f => `
+          <div class="bg-white p-3.5 rounded-md border border-mistral-hairline-strong flex items-center justify-between">
+            <div class="overflow-hidden pr-2">
+              <p class="text-xs font-medium text-mistral-ink truncate">${f.name}</p>
+              <div class="flex items-center space-x-2 text-[11px] text-mistral-steel font-mono mt-0.5">
+                <span class="text-mistral-orange">${f.id}</span>
+                <span>&bull;</span>
+                <span>${formatBytes(f.size)}</span>
+                <span>&bull;</span>
+                <span>${f.isProtected ? 'Locked' : 'Open'}</span>
+              </div>
+            </div>
+            <button onclick="loadTargetFileById('${f.id}'); closeHistoryModal();" class="shrink-0 px-3 py-1.5 rounded-md bg-mistral-cream text-mistral-ink hover:bg-mistral-cream-deeper text-xs font-medium transition-colors border border-mistral-beige-deep">
+              Inspect
+            </button>
+          </div>
+        `).join('');
+      };
+    }
+
+    function closeHistoryModal() {
+      const modal = document.getElementById('historyModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function clearHistory() {
+      if (!dbInstance) await initDatabase();
+      const tx = dbInstance.transaction('files', 'readwrite');
+      tx.objectStore('files').clear();
+      tx.oncomplete = () => {
+        openHistoryModal();
+        showToast('Vault records purged.', 'trash-2');
+      };
+    }
+
+    // Hash routing check on initialization
+    window.addEventListener('DOMContentLoaded', async () => {
+      lucide.createIcons();
+      await initDatabase();
+
+      if (window.location.hash.startsWith('#file=')) {
+        const fileId = window.location.hash.replace('#file=', '').trim();
+        if (fileId) {
+          loadTargetFileById(fileId);
+        }
+      }
+    });
+
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash.startsWith('#file=')) {
+        const fileId = window.location.hash.replace('#file=', '').trim();
+        if (fileId) {
+          loadTargetFileById(fileId);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
